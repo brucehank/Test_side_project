@@ -1,0 +1,31 @@
+{
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": [
+      "source.organizeImports"
+    ],
+    "editor.rulers": [100]
+  },
+  "autopep8.args": [
+    "--max-line-length=100",
+    "--ignore=E203,W503",
+    "-a"
+  ],
+  "isort.args": [
+    "--profile",
+    "black"
+  ],
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.rulers": [100],
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "[markdown]": { "files.trimTrailingWhitespace": false }
+}

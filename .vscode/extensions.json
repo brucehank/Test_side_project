@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "tamasfe.even-better-toml",
+    "hackmd.vscode-hackmd",
+    "ms-python.autopep8",
+    "ms-python.isort",
+    "ms-python.vscode-pylance",
+    "ms-python.python"
+  ],
+  "unwantedRecommendations": []
+}

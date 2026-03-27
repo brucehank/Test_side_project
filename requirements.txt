@@ -1,0 +1,11 @@
+allure-pytest==2.13.5
+autopep8==2.3.2
+Appium-Python-Client==5.2.4
+isort==6.1.0
+numpy==1.24.3
+pydantic>=2,<3
+pytest==8.3.4
+pytest-sugar==0.9.7
+pytest-rerunfailures==15.0
+requests==2.33.0
+typing_extensions==4.13.0
