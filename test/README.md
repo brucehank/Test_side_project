@@ -28,7 +28,8 @@
   - 測試資料優先使用 dataclass，不用 dict。
 - Helper 層：`test/api/helpers.py`
   - 放 reusable assertion 與共用驗證工具。
-  - 目前以 `VideoHelper` 與通用檢核函式（如 `is_iso_format`）為主。
+  - 目前以 `DummyJsonUsersHelper`（`assert_get_all_users` / `assert_login_user` /
+    `assert_get_current_authenticated_user`）等 API 回應驗證為主。
 - Fixture 層：`test/api/conftest.py`
   - 放環境解析、config 載入、client 選擇與 `user_token` fixture。
 - Spec 層：`test/api/test_*.py`
@@ -43,7 +44,7 @@
   - `user_config`：依 `--user` 選 client（預設第一個）。
   - `user_token`：優先讀 `clients[].access_token`，否則使用 `TEST_ACCESS_TOKEN`。
 - `test/api/helpers.py`
-  - 目前主要為 `VideoHelper` 與內容欄位檢核函式。
+  - 目前主要為 `DummyJsonUsersHelper` 與共用 API 回應檢核函式。
 - `test/api/types.py`
   - `TestUserTokens` 統一型別定義，避免各檔重複宣告。
 
