@@ -1,0 +1,13 @@
+[app_package]
+android = ""
+ios = ""
+
+[client_common]
+base_url = "https://dummyjson.com"
+x_api_key = ""
+
+[[clients]]
+name = ""
+phone_number = ""
+password = ""
+access_token = ""

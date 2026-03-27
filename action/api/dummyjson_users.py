@@ -6,14 +6,20 @@ log = logging.getLogger(__name__)
 
 
 class DummyJsonUsers(HttpClient):
-    def __init__(self, base_url: str = "https://dummyjson.com") -> None:
+    def __init__(
+        self,
+        base_url: str | None = None,
+        access_token: str | None = None,
+    ) -> None:
         super().__init__()
-        self.base_url = base_url.rstrip("/")
+        self.base_url = (base_url or "").rstrip("/")
+        self.access_token = access_token
 
     def _headers(self, access_token: str | None = None, extra: dict | None = None) -> dict:
         headers = {"Accept": "application/json"}
-        if access_token:
-            headers["Authorization"] = f"Bearer {access_token}"
+        resolved_access_token = access_token or self.access_token
+        if resolved_access_token:
+            headers["Authorization"] = f"Bearer {resolved_access_token}"
         if extra:
             headers.update({k: v for k, v in extra.items() if v is not None})
         return headers
@@ -75,13 +81,12 @@ class DummyJsonUsers(HttpClient):
 
     def get_current_authenticated_user_api(
         self,
-        access_token: str | None = None,
         **kwargs,
     ) -> HttpResponse:
         req = ApiRequest(
             url=f"{self.base_url}/user/me",
             method="get",
-            headers=self._headers(access_token=access_token),
+            headers=self._headers(),
         )
         resp = self.request(req, **kwargs)
         log.debug("Call GET current authenticated user api")
