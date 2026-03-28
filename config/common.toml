@@ -13,11 +13,21 @@ dev = [
       "./test/api/test_dummyjson_users.py",
     ],
   ] },
+  { name = "dummyjson_carts", user = "client02", jobs = [
+    [
+      "./test/api/test_dummyjson_carts.py",
+    ],
+  ] },
 ]
 prod = [
   { name = "dummyjson_consistency", user = "client01", jobs = [
     [
       "./test/api/test_dummyjson_users.py",
+    ],
+  ] },
+  { name = "dummyjson_carts", user = "client02", jobs = [
+    [
+      "./test/api/test_dummyjson_carts.py",
     ],
   ] },
 ]

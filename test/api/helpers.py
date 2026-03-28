@@ -3,9 +3,220 @@ import random
 
 import allure
 
+from action.api.dummyjson_carts import DummyJsonCarts
 from action.api.dummyjson_users import DummyJsonUsers
 
 log = logging.getLogger(__name__)
+
+
+class DummyJsonCartsHelper:
+    def assert_get_user_carts(
+        self,
+        dummy_json_carts: DummyJsonCarts,
+        user_id: int,
+    ) -> dict:
+        expected_status = 200
+        response_time_limit = 5.0
+
+        with allure.step("Call get_user_carts_api"):
+            resp = dummy_json_carts.get_user_carts_api(user_id=user_id)
+            if not resp.ok:
+                log.error(
+                    "get_user_carts_api failed, user_id=%s, status_code=%s, response=%s",
+                    user_id,
+                    resp.status_code,
+                    resp.response,
+                )
+
+            with allure.step("Check response object exists"):
+                assert resp is not None, "response should not be None"
+
+            with allure.step(f"Check status code is {expected_status}"):
+                assert resp.status_code == expected_status, (
+                    f"應回傳 {expected_status}，實際為 {resp.status_code}"
+                )
+
+            with allure.step("Check response ok is True"):
+                assert resp.ok, f"API call failed, status_code={resp.status_code}"
+
+            with allure.step(f"Check response time less than {response_time_limit} seconds"):
+                assert resp.elapsed is not None, "response.elapsed should not be None"
+                assert resp.elapsed < response_time_limit, (
+                    f"API 響應時間過長，實際為 {resp.elapsed} 秒"
+                )
+
+        payload = resp.response
+        with allure.step("Check payload is dict"):
+            assert isinstance(payload, dict), f"response payload should be dict, got {type(payload)}"
+
+        with allure.step("Check carts/total/skip/limit fields"):
+            carts = payload.get("carts")
+            total = payload.get("total")
+            skip = payload.get("skip")
+            limit = payload.get("limit")
+            assert isinstance(carts, list), "carts should be list"
+            assert isinstance(total, int) and total >= 0, "total should be non-negative int"
+            assert isinstance(skip, int) and skip >= 0, "skip should be non-negative int"
+            assert isinstance(limit, int) and limit >= 0, "limit should be non-negative int"
+            assert total >= len(carts), "total should be >= carts length"
+
+        with allure.step("Check each cart belongs to user and products is list"):
+            for index, cart in enumerate(carts):
+                assert isinstance(cart, dict), f"carts[{index}] should be dict"
+                assert cart.get("userId") == user_id, (
+                    f"carts[{index}].userId should be {user_id}, got {cart.get('userId')}"
+                )
+                products = cart.get("products")
+                assert isinstance(products, list), f"carts[{index}].products should be list"
+                assert products, f"carts[{index}].products should be non-empty list"
+
+        return payload
+
+    def assert_get_single_cart(
+        self,
+        dummy_json_carts: DummyJsonCarts,
+        cart_id: int,
+    ) -> dict:
+        expected_status = 200
+        response_time_limit = 5.0
+
+        with allure.step("Call get_single_cart_api"):
+            resp = dummy_json_carts.get_single_cart_api(cart_id=cart_id)
+            if not resp.ok:
+                log.error(
+                    "get_single_cart_api failed, cart_id=%s, status_code=%s, response=%s",
+                    cart_id,
+                    resp.status_code,
+                    resp.response,
+                )
+
+            with allure.step("Check response object exists"):
+                assert resp is not None, "response should not be None"
+
+            with allure.step(f"Check status code is {expected_status}"):
+                assert resp.status_code == expected_status, (
+                    f"應回傳 {expected_status}，實際為 {resp.status_code}"
+                )
+
+            with allure.step("Check response ok is True"):
+                assert resp.ok, f"API call failed, status_code={resp.status_code}"
+
+            with allure.step(f"Check response time less than {response_time_limit} seconds"):
+                assert resp.elapsed is not None, "response.elapsed should not be None"
+                assert resp.elapsed < response_time_limit, (
+                    f"API 響應時間過長，實際為 {resp.elapsed} 秒"
+                )
+
+        payload = resp.response
+        with allure.step("Check payload is dict"):
+            assert isinstance(payload, dict), f"response payload should be dict, got {type(payload)}"
+
+        with allure.step("Check single cart core fields"):
+            assert payload.get("id") == cart_id, (
+                f"cart id mismatch, expected={cart_id}, actual={payload.get('id')}"
+            )
+            assert isinstance(payload.get("userId"), int) and payload.get("userId") > 0, (
+                "userId should be positive int"
+            )
+            assert isinstance(payload.get("products"), list), "products should be list"
+            assert payload.get("products"), "products should be non-empty list"
+
+        self.assert_cart_summary_fields(payload)
+        return payload
+
+    def assert_cart_summary_fields(self, cart: dict) -> None:
+        with allure.step("Check cart summary fields"):
+            assert isinstance(cart, dict), f"cart should be dict, got {type(cart)}"
+            products = cart.get("products")
+            assert isinstance(products, list), "products should be list"
+            assert products, "products should be non-empty list"
+
+            total_products = cart.get("totalProducts")
+            total_quantity = cart.get("totalQuantity")
+            total = cart.get("total")
+            discounted_total = cart.get("discountedTotal")
+            assert isinstance(total_products, int) and total_products >= 0, (
+                "totalProducts should be non-negative int"
+            )
+            assert isinstance(total_quantity, int) and total_quantity >= 0, (
+                "totalQuantity should be non-negative int"
+            )
+            assert isinstance(total, (int, float)) and total >= 0, (
+                "total should be non-negative number"
+            )
+            assert isinstance(discounted_total, (int, float)) and discounted_total >= 0, (
+                "discountedTotal should be non-negative number"
+            )
+
+            assert total_products == len(products), (
+                f"totalProducts mismatch, expected={len(products)}, actual={total_products}"
+            )
+
+            quantities: list[int] = []
+            for index, product in enumerate(products):
+                assert isinstance(product, dict), f"products[{index}] should be dict"
+                quantity = product.get("quantity")
+                assert isinstance(quantity, int) and quantity >= 0, (
+                    f"products[{index}].quantity should be non-negative int"
+                )
+                quantities.append(quantity)
+
+            assert total_quantity == sum(quantities), (
+                f"totalQuantity mismatch, expected={sum(quantities)}, actual={total_quantity}"
+            )
+            assert discounted_total <= total, (
+                f"discountedTotal should be <= total, discountedTotal={discounted_total}, total={total}"
+            )
+
+    def assert_cart_list_detail_consistency(
+        self,
+        cart_from_list: dict,
+        cart_detail: dict,
+    ) -> None:
+        with allure.step("Check cart list/detail summary consistency"):
+            assert isinstance(cart_from_list, dict), "cart_from_list should be dict"
+            assert isinstance(cart_detail, dict), "cart_detail should be dict"
+
+            compare_fields = [
+                "id",
+                "userId",
+                "total",
+                "discountedTotal",
+                "totalProducts",
+                "totalQuantity",
+            ]
+            for field in compare_fields:
+                assert cart_from_list.get(field) == cart_detail.get(field), (
+                    f"{field} mismatch: list={cart_from_list.get(field)!r}, detail={cart_detail.get(field)!r}"
+                )
+
+        with allure.step("Check cart list/detail products id & quantity consistency"):
+            list_products = cart_from_list.get("products")
+            detail_products = cart_detail.get("products")
+            assert isinstance(list_products, list), "cart_from_list.products should be list"
+            assert isinstance(detail_products, list), "cart_detail.products should be list"
+
+            def _extract_pairs(products: list[dict], source_name: str) -> list[tuple[int, int]]:
+                pairs: list[tuple[int, int]] = []
+                for index, product in enumerate(products):
+                    assert isinstance(product, dict), f"{source_name}.products[{index}] should be dict"
+                    product_id = product.get("id")
+                    quantity = product.get("quantity")
+                    assert isinstance(product_id, int) and product_id > 0, (
+                        f"{source_name}.products[{index}].id should be positive int"
+                    )
+                    assert isinstance(quantity, int) and quantity >= 0, (
+                        f"{source_name}.products[{index}].quantity should be non-negative int"
+                    )
+                    pairs.append((product_id, quantity))
+                pairs.sort(key=lambda item: (item[0], item[1]))
+                return pairs
+
+            list_pairs = _extract_pairs(list_products, "cart_from_list")
+            detail_pairs = _extract_pairs(detail_products, "cart_detail")
+            assert list_pairs == detail_pairs, (
+                f"products (id, quantity) mismatch: list={list_pairs}, detail={detail_pairs}"
+            )
 
 
 class DummyJsonUsersHelper:
