@@ -10,6 +10,8 @@ from utils.config_toml import ClientCommonConfig
 
 @pytest.mark.dev
 @pytest.mark.prod
+@allure.feature("DummyJSON Users")
+@allure.story("User Relationships")
 class TestDummyJsonUsers(DummyJsonUsersHelper):
     """Entry class for DummyJSON users API tests."""
 
@@ -86,4 +88,54 @@ class TestDummyJsonUsers(DummyJsonUsersHelper):
                 assert me_payload.get(field) == single_user_payload.get(field), (
                     f"Field mismatch for '{field}': "
                     f"me={me_payload.get(field)!r}, users/{{id}}={single_user_payload.get(field)!r}"
+                )
+
+    @allure.title("[DummyJSON] user -> carts relationship")
+    def test_user_carts_relationship(
+        self,
+        client_common_config: ClientCommonConfig,
+    ) -> None:
+        with allure.step("Build DummyJsonUsers client"):
+            dummy_json_users = DummyJsonUsers(
+                base_url=str(client_common_config.base_url),
+            )
+
+        with allure.step("Get all users"):
+            all_users_payload = self.assert_get_all_users(dummy_json_users)
+
+        with allure.step("Pick one random user id from users list"):
+            users = all_users_payload.get("users")
+            assert isinstance(users, list) and users, "users should be non-empty list"
+            random_user = self.pick_random_loginable_user(users)
+            user_id = random_user.get("id")
+            assert isinstance(user_id, int) and user_id > 0, "user_id should be positive int"
+
+        with allure.step("Call get_user_carts_api by selected user id"):
+            user_carts_payload = self.assert_get_user_carts(
+                dummy_json_users=dummy_json_users,
+                user_id=user_id,
+            )
+
+        with allure.step("Check user carts payload is dict"):
+            assert isinstance(user_carts_payload, dict), "user carts payload should be dict"
+
+        with allure.step("Check carts/total/skip/limit structure"):
+            carts = user_carts_payload.get("carts")
+            total = user_carts_payload.get("total")
+            skip = user_carts_payload.get("skip")
+            limit = user_carts_payload.get("limit")
+            assert isinstance(carts, list), "carts should be list"
+            assert isinstance(total, int) and total >= 0, "total should be non-negative int"
+            assert isinstance(skip, int) and skip >= 0, "skip should be non-negative int"
+            assert isinstance(limit, int) and limit >= 0, "limit should be non-negative int"
+            assert total >= len(carts), "total should be >= carts length"
+
+        with allure.step("Check each cart userId and products"):
+            for index, cart in enumerate(carts):
+                assert isinstance(cart, dict), f"carts[{index}] should be dict"
+                assert cart.get("userId") == user_id, (
+                    f"carts[{index}].userId should be {user_id}, got {cart.get('userId')}"
+                )
+                assert isinstance(cart.get("products"), list), (
+                    f"carts[{index}].products should be list"
                 )
