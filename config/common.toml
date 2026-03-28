@@ -8,21 +8,16 @@ test_case_name = ""
 
 [test_lanes.api]
 dev = [
-  { name = "login", user = "client01", jobs = [
+  { name = "dummyjson_consistency", user = "client01", jobs = [
     [
-      "./test/api/test_login.py",
-    ],
-  ] },
-  { name = "profile", user = "client02", jobs = [
-    [
-      "./test/api/test_profile.py",
+      "./test/api/test_dummyjson_users.py",
     ],
   ] },
 ]
 prod = [
-  { name = "login", user = "client01", jobs = [
+  { name = "dummyjson_consistency", user = "client01", jobs = [
     [
-      "./test/api/test_login.py",
+      "./test/api/test_dummyjson_users.py",
     ],
   ] },
 ]
