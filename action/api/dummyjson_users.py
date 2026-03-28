@@ -56,6 +56,20 @@ class DummyJsonUsers(HttpClient):
         log.debug("Call GET all users api")
         return self._normalize_json_response(resp)
 
+    def get_single_user_api(
+        self,
+        user_id: int,
+        **kwargs,
+    ) -> HttpResponse:
+        req = ApiRequest(
+            url=f"{self.base_url}/users/{user_id}",
+            method="get",
+            headers=self._headers(),
+        )
+        resp = self.request(req, **kwargs)
+        log.debug("Call GET single user api, user_id=%s", user_id)
+        return self._normalize_json_response(resp)
+
     def login_user_api(
         self,
         username: str,
